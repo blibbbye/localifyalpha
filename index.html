@@ -258,7 +258,7 @@
     .empty{padding:54px 22px;text-align:center;border:1px dashed #2d343e;border-radius:18px;color:#7f8894}
     .empty h3{color:#d7dbe0;margin:0 0 6px}
     .lyricsPanel{white-space:pre-wrap;line-height:1.8;color:#7f8995;background:#101318;border:1px solid #242a31;border-radius:18px;padding:20px;margin-top:12px;min-height:280px}
-    .lyricsPanel.syncedLyrics{white-space:normal;display:grid;gap:8px}.lyricLine{padding:9px 12px;border-radius:10px;color:#7f8995;line-height:1.65}.lyricLine.active{color:#fff}
+    .lyricsPanel.syncedLyrics{white-space:normal;display:grid;gap:8px}.lyricLine{padding:9px 12px;border-radius:10px;color:#7f8995;line-height:1.65}.lyricLine.clickableLyric{cursor:pointer;transition:background .15s,color .15s}.lyricLine.clickableLyric:hover{background:rgba(255,255,255,.07);color:#fff}.lyricLine.clickableLyric:focus-visible{outline:2px solid var(--accent);outline-offset:2px}.lyricLine.active{color:#fff}
     .modalShade{position:fixed;inset:0;background:rgba(0,0,0,.66);backdrop-filter:blur(10px);display:none;align-items:center;justify-content:center;z-index:40;padding:18px}
     .modalShade.show{display:flex}
     .modalShade .modal{overscroll-behavior:contain}
@@ -4144,8 +4144,18 @@ function editLocalProfile(){
     });
     const timed=rows.filter(r=>r.time!==null);
     const hasTimed=timed.length>0;
-    $("#content").innerHTML='<div class="profileHero"><div class="profileArt">'+coverHtml(t)+'</div><div><h2 class="viewTitle">'+esc(t.title)+'</h2><div class="subtle">'+artistLinksForTrackHtml(t)+' • '+albumLinkForTrackHtml(t)+'</div><div class="entityActions"><button class="primary" id="playLyrics">'+uiIcon("play")+' Play</button><button class="secondary" id="editLyrics">'+uiIcon("edit")+' Edit song</button></div></div></div><div class="lyricsPanel '+(hasTimed?"syncedLyrics":"")+'" id="lyricsDisplay">'+(rows.length?rows.map(r=>'<div class="lyricLine" data-lyric-index="'+r.index+'">'+esc(r.text||" ")+'</div>').join(""):'No lyrics saved for this song yet.')+'</div>';
+    $("#content").innerHTML='<div class="profileHero"><div class="profileArt">'+coverHtml(t)+'</div><div><h2 class="viewTitle">'+esc(t.title)+'</h2><div class="subtle">'+artistLinksForTrackHtml(t)+' • '+albumLinkForTrackHtml(t)+'</div><div class="entityActions"><button class="primary" id="playLyrics">'+uiIcon("play")+' Play</button><button class="secondary" id="editLyrics">'+uiIcon("edit")+' Edit song</button></div></div></div><div class="lyricsPanel '+(hasTimed?"syncedLyrics":"")+'" id="lyricsDisplay">'+(rows.length?rows.map(r=>'<div class="lyricLine '+(r.time!==null?"clickableLyric":"")+'" data-lyric-index="'+r.index+'" '+(r.time!==null?'role="button" tabindex="0" aria-label="Play from '+Math.floor(r.time/60)+':'+String(Math.floor(r.time%60)).padStart(2,"0")+'" data-lyric-time="'+r.time+'"':'')+'>'+esc(r.text||" ")+'</div>').join(""):'No lyrics saved for this song yet.')+'</div>';
     $("#playLyrics").onclick=()=>playId(id);$("#editLyrics").onclick=()=>editTrack(id);
+    const seekToLyric=time=>{
+      const seek=()=>{if(audio.dataset.localifyTrackId===id&&Number.isFinite(audio.duration))audio.currentTime=Math.max(0,Math.min(audio.duration,time))};
+      if(audio.dataset.localifyTrackId===id&&audio.readyState>=1){seek();return}
+      const onLoaded=()=>{if(state.currentId===id&&audio.dataset.localifyTrackId===id)seek()};
+      audio.addEventListener("loadedmetadata",onLoaded,{once:true});
+      playId(id);
+    };
+    const lyricClick=e=>{const line=e.target.closest(".clickableLyric");if(!line)return;seekToLyric(Number(line.dataset.lyricTime))};
+    $("#lyricsDisplay").addEventListener("click",lyricClick);
+    $("#lyricsDisplay").addEventListener("keydown",e=>{if((e.key==="Enter"||e.key===" ")&&e.target.matches(".clickableLyric")){e.preventDefault();seekToLyric(Number(e.target.dataset.lyricTime))}});
     const update=()=>{
       if(!hasTimed||audio.dataset.localifyTrackId!==id)return;
       const now=audio.currentTime;let active=-1;
