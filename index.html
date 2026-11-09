@@ -1724,7 +1724,7 @@ body.theme-gradient .lrcInline{background:linear-gradient(135deg,var(--panel2),v
     let restored=false;
     try{restored=await restoreSaved()}catch(e){console.warn("Localify restore failed",e)}
     try{state.libraryFolderHandle=await idbGetLibraryFolderHandle()}catch{state.libraryFolderHandle=null}
-    state.settings=Object.assign({volume:.9,shuffle:false,repeat:"off",eq:{bass:0,mid:0,treble:0,gain:0,preset:"flat",compressor:true},discordPresence:true,nowSidebarHidden:false,theme:{preset:"white",mode:"solid",color1:"#ffffff",color2:"#ffffff"}},state.settings||{});
+    state.settings=Object.assign({volume:.9,shuffle:false,repeat:"off",eq:{bass:0,mid:0,treble:0,gain:0,preset:"flat",compressor:true},discordPresence:true,nowSidebarHidden:false,theme:"aurora",lrcSelectionMode:"words"},state.settings||{});if(typeof state.settings.theme!=="string"||!localifyThemes.some(t=>t.id===state.settings.theme))state.settings.theme="aurora";if(!["words","sentences"].includes(state.settings.lrcSelectionMode))state.settings.lrcSelectionMode="words";
     state.settings.shuffle=(state.settings.shuffle===true||state.settings.shuffle===1||state.settings.shuffle==="true");
 
     state.settings.eq=Object.assign({bass:0,mid:0,treble:0,gain:0,preset:"flat",compressor:true},state.settings.eq||{});
@@ -4070,6 +4070,7 @@ function editLocalProfile(){
     $("#lrcLines").onclick=e=>{
       const row=e.target.closest("[data-lrc-line]");if(!row)return;
       const lineIndex=Number(row.dataset.lrcLine),word=selectionMode==="words"?e.target.closest("[data-lrc-word]"):null;
+      if(selectionMode==="words"&&!word)return;
       if(!word){selectedLine=lineIndex;selectedWords.clear();lastWord=-1;render();return}
       const wordIndex=Number(word.dataset.lrcWord);
       if(selectedLine!==lineIndex){selectedLine=lineIndex;selectedWords.clear();lastWord=-1}
