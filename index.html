@@ -870,6 +870,21 @@ main{min-width:0;min-height:0}
 .logo{background:transparent!important;background-image:none!important;box-shadow:none!important;overflow:hidden}
 .logo .logoMarkImage{display:block;width:100%;height:100%;padding:0;object-fit:contain;mix-blend-mode:normal;filter:none}
 </style>
+<style id="localify-colour-themes">
+:root{--theme-transition:background-color .45s ease,border-color .4s ease,color .3s ease,box-shadow .4s ease}
+html,body,#app,#main,#content,.sidebar,.player,.nowSidebar,.profileMenu,.settingsSection,.card,.folderCard,.quickCard,.heroCard,.presetHero,.tableWrap,.modal,.lrcInline,.lrcLine,.themeChoice,button,.pill,.search input{transition:background-color .42s ease,border-color .38s ease,color .28s ease,box-shadow .42s ease,filter .35s ease}
+body.theme-gradient{background-image:radial-gradient(ellipse at 8% 0%,var(--theme-glow-a),transparent 42%),radial-gradient(ellipse at 92% 100%,var(--theme-glow-b),transparent 44%)}
+body.theme-gradient .sidebar{background:linear-gradient(180deg,var(--theme-sidebar),var(--panel))!important}
+body.theme-gradient .player{background:linear-gradient(100deg,var(--panel),var(--panel2),var(--panel))!important}
+body.theme-gradient .settingsSection,body.theme-gradient .card,body.theme-gradient .folderCard,body.theme-gradient .tableWrap,body.theme-gradient .nowSidebar{background:linear-gradient(145deg,var(--panel2),var(--panel))!important}
+body.theme-gradient .primary,body.theme-gradient .logo{background-image:var(--theme-gradient)!important;color:#fff!important;border-color:transparent!important;box-shadow:0 8px 24px var(--theme-shadow)!important}
+body.theme-gradient .primary:hover,body.theme-gradient .logo:hover{filter:brightness(1.12) saturate(1.12)}
+body.theme-gradient .themeChoice.active{background:linear-gradient(145deg,var(--theme-soft),var(--panel2))!important}
+body.theme-gradient .lrcInline{background:linear-gradient(135deg,var(--panel2),var(--panel),color-mix(in srgb,var(--theme-a) 9%,var(--panel)))!important;border-color:var(--theme-border)}
+.lrcSelectionMode{display:flex;align-items:center;justify-content:flex-end;gap:10px}.lrcSelectionMode label{font-size:11px;color:var(--muted);font-weight:800}.lrcSelectionMode select{background:var(--panel2);color:var(--text);border:1px solid var(--theme-border);border-radius:9px;padding:8px 12px;min-width:130px}
+.lrcWord{cursor:pointer}.lrcLineWords>span.lrcWord{cursor:default}
+@media(prefers-reduced-motion:reduce){html,body,#app,#main,#content,.sidebar,.player,.nowSidebar,.profileMenu,.settingsSection,.card,.folderCard,.quickCard,.heroCard,.presetHero,.tableWrap,.modal,.lrcInline,.lrcLine,.themeChoice,button,.pill,.search input{transition:none!important}}
+</style>
 </head>
 <body>
 <div class="app">
@@ -972,26 +987,44 @@ main{min-width:0;min-height:0}
   const state = {
     version: 12, tracks: [], albums: [], artists: [], playlists: [], folders: [], liked: [], recent: [],
     queue: [], queueIndex: -1, currentId: null, libraryFolderHandle: null,
-    settings: { volume:.9, shuffle:false, repeat:"off", eq:{bass:0,mid:0,treble:0,gain:0,preset:"flat",compressor:true}, discordPresence:true, nowSidebarHidden:false },
+    settings: { volume:.9, shuffle:false, repeat:"off", eq:{bass:0,mid:0,treble:0,gain:0,preset:"flat",compressor:true}, discordPresence:true, nowSidebarHidden:false, theme:"aurora", lrcSelectionMode:"words" },
     profile: { displayName:"", avatar:null },
     analytics: { totalSeconds:0, plays:{}, trackSeconds:{}, days:{}, history:[] },
     currentView:"home", search:"", searchFilter:"all", librarySort:"added", librarySortDir:"desc",
     selected:[], detail:null, viewModes:{albums:"large",artists:"large",playlists:"large",songs:"list",folders:"large"}, catalogSorts:{albums:"asc",artists:"asc",playlists:"asc",folders:"asc"}, playlistSort:{}, trackSorts:{}
   };
 
+  const localifyThemes=[
+    {id:"aurora",name:"Aurora",desc:"Icy blue, violet and mint",a:"#67e8f9",b:"#a78bfa",c:"#34d399",bg:"#080d18",panel:"#10182a",panel2:"#17233a",panel3:"#22314d",sidebar:"#0b1323",border:"#293b59",hover:"#1b2a45",swatch:"linear-gradient(120deg,#67e8f9,#a78bfa,#34d399)"},
+    {id:"sunset",name:"Sunset",desc:"Orange, pink and purple",a:"#fb7185",b:"#f59e0b",c:"#a78bfa",bg:"#170b18",panel:"#241225",panel2:"#32182b",panel3:"#452039",sidebar:"#1c0e20",border:"#593047",hover:"#3b1d35",swatch:"linear-gradient(120deg,#fb7185,#f59e0b,#a78bfa)"},
+    {id:"candy",name:"Candy",desc:"Pink, lilac and electric blue",a:"#f472b6",b:"#c084fc",c:"#60a5fa",bg:"#140d20",panel:"#21152f",panel2:"#2c1b40",panel3:"#3c2554",sidebar:"#190f28",border:"#503365",hover:"#352044",swatch:"linear-gradient(120deg,#f472b6,#c084fc,#60a5fa)"},
+    {id:"emerald",name:"Emerald",desc:"Fresh green with turquoise",a:"#34d399",b:"#2dd4bf",c:"#a3e635",bg:"#071610",panel:"#0d211a",panel2:"#123026",panel3:"#1b4033",sidebar:"#091b14",border:"#245541",hover:"#173a2d",swatch:"linear-gradient(120deg,#34d399,#2dd4bf,#a3e635)"},
+    {id:"cyber",name:"Cyberpunk",desc:"Neon pink, violet and cyan",a:"#e879f9",b:"#22d3ee",c:"#f472b6",bg:"#0d0920",panel:"#17112d",panel2:"#21183d",panel3:"#302052",sidebar:"#100b25",border:"#453064",hover:"#291d49",swatch:"linear-gradient(120deg,#e879f9,#22d3ee,#f472b6)"},
+    {id:"ocean",name:"Deep Ocean",desc:"Blue, aqua and seafoam",a:"#38bdf8",b:"#2dd4bf",c:"#818cf8",bg:"#07131d",panel:"#0d202d",panel2:"#123044",panel3:"#1a4058",sidebar:"#091925",border:"#24506a",hover:"#17374d",swatch:"linear-gradient(120deg,#38bdf8,#2dd4bf,#818cf8)"},
+    {id:"lava",name:"Lava",desc:"Red, orange and golden glow",a:"#fb4b4e",b:"#fb923c",c:"#facc15",bg:"#190b08",panel:"#28120e",panel2:"#381910",panel3:"#4b2414",sidebar:"#1e0d09",border:"#63331e",hover:"#402015",swatch:"linear-gradient(120deg,#fb4b4e,#fb923c,#facc15)"},
+    {id:"midnight",name:"Midnight Blue",desc:"Classic dark with vivid blue",a:"#60a5fa",b:"#818cf8",c:"#22d3ee",bg:"#090d18",panel:"#111827",panel2:"#182338",panel3:"#24334d",sidebar:"#0c1423",border:"#2c3d5b",hover:"#1c2c48",swatch:"linear-gradient(120deg,#60a5fa,#818cf8,#22d3ee)"}
+  ];
   function applyTheme(){
     const root=document.documentElement;
+    const t=localifyThemes.find(x=>x.id===state.settings.theme)||localifyThemes[0];
     const vars={
-      "--bg":"#090a0c","--panel":"#111214","--panel2":"#17181b","--panel3":"#202125","--line":"#26282d",
-      "--theme-sidebar":"#0b0c0e","--theme-border":"#272a30","--theme-hover":"#17191d",
-      "--theme-a":"#7dd3fc","--theme-b":"#bae6fd","--accent":"#7dd3fc","--accent2":"#bae6fd",
-      "--theme-soft":"rgba(125,211,252,.085)","--theme-soft-2":"rgba(125,211,252,.055)",
-      "--theme-shadow":"rgba(125,211,252,.22)","--theme-glow-a":"rgba(125,211,252,.022)",
-      "--theme-glow-b":"rgba(125,211,252,.016)","--context-glow":"rgba(125,211,252,.075)",
-      "--logo-background":"#7dd3fc","--logo-shadow":"rgba(125,211,252,.24)"
+      "--bg":t.bg,"--panel":t.panel,"--panel2":t.panel2,"--panel3":t.panel3,"--line":t.border,
+      "--theme-sidebar":t.sidebar,"--theme-border":t.border,"--theme-hover":t.hover,
+      "--theme-a":t.a,"--theme-b":t.b,"--accent":t.a,"--accent2":t.b,
+      "--theme-soft":"color-mix(in srgb,"+t.a+" 13%,transparent)","--theme-soft-2":"color-mix(in srgb,"+t.b+" 8%,transparent)",
+      "--theme-shadow":"color-mix(in srgb,"+t.a+" 32%,transparent)","--theme-glow-a":"color-mix(in srgb,"+t.a+" 18%,transparent)",
+      "--theme-glow-b":"color-mix(in srgb,"+t.b+" 14%,transparent)","--context-glow":"color-mix(in srgb,"+t.a+" 15%,transparent)",
+      "--logo-background":"linear-gradient(135deg,"+t.a+","+t.b+","+t.c+")","--logo-shadow":"color-mix(in srgb,"+t.a+" 35%,transparent)",
+      "--theme-gradient":"linear-gradient(135deg,"+t.a+","+t.b+","+t.c+")"
     };
     for(const [key,value] of Object.entries(vars))root.style.setProperty(key,value);
-    document.body.classList.remove("theme-gradient","theme-solid");
+    document.body.classList.add("theme-gradient");
+    document.body.dataset.theme=t.id;
+  }
+  async function chooseTheme(id){
+    if(!localifyThemes.some(t=>t.id===id))return;
+    state.settings.theme=id;applyTheme();await save();
+    $(".themeChoice").forEach(b=>b.classList.toggle("active",b.dataset.theme===id));
   }
 
   let queueBase=[];
@@ -3537,6 +3570,11 @@ function editLocalProfile(){
         '<div class="sectionHead"><div><h2 style="font-size:30px;letter-spacing:-1px;margin:0">Account settings</h2><span>Playback, Discord and library preferences.</span></div><div class="sectionHeadActions"><button type="button" class="secondary" id="accountSettingsBack">Back to profile</button></div></div>'+
         '<div class="settingsGrid">'+
           '<section class="settingsSection">'+
+            '<div class="settingsSectionHead"><div><div class="settingsSectionTitle">Themes</div><div class="settingsSectionSub">Choose a colourful gradient theme for the whole Localify interface. Your choice is saved on this device.</div></div></div>'+
+            '<div class="themeGrid">'+localifyThemes.map(t=>'<button type="button" class="themeChoice '+((state.settings.theme||"aurora")===t.id?"active":"")+'" data-theme="'+t.id+'"><div class="themeSwatch" style="background:'+t.swatch+'"></div><strong>'+t.name+'</strong><span>'+t.desc+'</span></button>').join("")+'</div>'+
+            '<div class="settingsSectionSub" style="margin-top:10px">Gradients and accent colours flow through buttons, cards, navigation, playback and menus.</div>'+
+          '</section>'+
+          '<section class="settingsSection">'+
             '<div class="settingsSectionHead"><div><div class="settingsSectionTitle">Discord Rich Presence</div><div class="settingsSectionSub">Connect the Localify Discord Connector and control what appears in Discord.</div></div></div>'+
             '<div class="settingsToggleRow"><div class="settingsToggleCopy"><strong>Show listening status</strong><span>Show your current song and artist while music is playing.</span></div><input type="checkbox" id="accountDiscord" '+(enabled?'checked':'')+'></div>'+
             '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><button type="button" class="primary" id="accountOpenDiscord">Open Discord connector</button><button type="button" class="secondary" id="accountReconnectDiscord">Reconnect</button></div>'+
@@ -3556,6 +3594,7 @@ function editLocalProfile(){
       '</div>';
     const back=$("#accountSettingsBack");
     if(back)back.onclick=()=>showProfile();
+    $(".themeChoice").forEach(button=>button.onclick=()=>chooseTheme(button.dataset.theme));
     const discord=$("#accountDiscord");
     if(discord)discord.onchange=async e=>{
       state.settings.discordPresence=!!e.target.checked;
@@ -3975,7 +4014,7 @@ function editLocalProfile(){
 
         ${field("Year","songYear",t.year||"")}${field("Genre","songGenre",t.genre||"")}${field("Track #","songTrack",t.track||"")}${field("Disc #","songDisc",t.disc||"")}
         <div class="field full"><label><input id="songExplicit" type="checkbox" ${t.explicit?"checked":""}> Explicit</label></div>
-        <div class="field full"><div class="lrcFieldHead"><label for="songLyrics">Lyrics</label><button type="button" class="secondary small" id="openLrcEditor">${uiIcon("mic")} Sync lyrics (LRC)</button></div><textarea id="songLyrics" class="lyricsEditor" spellcheck="false">${esc(t.lyrics||"")}</textarea><div class="lyricsHint">Paste regular lyrics here, or use Sync lyrics to timestamp lines and individual words while the song plays.</div><div class="lrcInline" id="lrcInline" hidden><div class="lrcInlineTop"><div><strong>Sync lyrics</strong><div class="help">Play the song, then click a sentence to timestamp the whole line or click words to timestamp just those words.</div></div><span class="lrcLiveTime" id="lrcLiveTime">00:00.00</span></div><div class="lrcTransport"><button type="button" class="secondary" id="lrcPlay">${uiIcon("play")} Play</button><button type="button" class="secondary" id="lrcPause">${uiIcon("pause")} Pause</button><button type="button" class="secondary" id="lrcSeekBack">−5 sec</button><button type="button" class="secondary" id="lrcSeekForward">+5 sec</button><button type="button" class="secondary small" id="lrcImport">Import</button><button type="button" class="secondary small" id="lrcExport">Export</button><input type="file" id="lrcImportFile" accept=".lrc,.txt,text/plain" hidden></div><input type="range" id="lrcSeek" min="0" max="1000" value="0" step="1" aria-label="Song position" class="lrcSeek"><div class="lrcLines" id="lrcLines"></div><div class="lrcInlineFoot"><span class="help" id="lrcSelectionHint">Select a lyric line to begin.</span><button type="button" class="primary small" id="lrcSetTime">${uiIcon("clock")} Set timestamp</button></div><div class="lrcInlineActions"><button type="button" class="secondary small" id="lrcClearTimes">Clear timestamps</button><button type="button" class="primary small" id="lrcApply">Use synced lyrics</button></div></div></div>
+        <div class="field full"><div class="lrcFieldHead"><label for="songLyrics">Lyrics</label><button type="button" class="secondary small" id="openLrcEditor">${uiIcon("mic")} Sync lyrics (LRC)</button></div><textarea id="songLyrics" class="lyricsEditor" spellcheck="false">${esc(t.lyrics||"")}</textarea><div class="lyricsHint">Paste regular lyrics here, or use Sync lyrics to timestamp lines and individual words while the song plays.</div><div class="lrcInline" id="lrcInline" hidden><div class="lrcInlineTop"><div><strong>Sync lyrics</strong><div class="help">Choose whether clicks select whole sentences or individual words.</div></div><span class="lrcLiveTime" id="lrcLiveTime">00:00.00</span></div><div class="lrcSelectionMode"><label for="lrcSelectionMode">Click selection</label><select id="lrcSelectionMode"><option value="words">Words</option><option value="sentences">Sentences</option></select></div><div class="lrcTransport"><button type="button" class="secondary" id="lrcPlay">${uiIcon("play")} Play</button><button type="button" class="secondary" id="lrcPause">${uiIcon("pause")} Pause</button><button type="button" class="secondary" id="lrcSeekBack">−5 sec</button><button type="button" class="secondary" id="lrcSeekForward">+5 sec</button><button type="button" class="secondary small" id="lrcImport">Import</button><button type="button" class="secondary small" id="lrcExport">Export</button><input type="file" id="lrcImportFile" accept=".lrc,.txt,text/plain" hidden></div><input type="range" id="lrcSeek" min="0" max="1000" value="0" step="1" aria-label="Song position" class="lrcSeek"><div class="lrcLines" id="lrcLines"></div><div class="lrcInlineFoot"><span class="help" id="lrcSelectionHint">Select a lyric line to begin.</span><button type="button" class="primary small" id="lrcSetTime">${uiIcon("clock")} Set timestamp</button></div><div class="lrcInlineActions"><button type="button" class="secondary small" id="lrcClearTimes">Clear timestamps</button><button type="button" class="primary small" id="lrcApply">Use synced lyrics</button></div></div></div>
         <div class="field full"><label>Credits</label><div class="formGrid">${field("Producer(s)","credProducer",creditList(t.credits,"producer"))}${field("Songwriter(s)","credSongwriter",creditList(t.credits,"songwriter"))}${field("Composer(s)","credComposer",creditList(t.credits,"composer"))}${field("Publisher(s)","credPublisher",creditList(t.credits,"publisher"))}</div></div>
       </div><div class="modalFoot"><button class="secondary" id="cancelEdit">Cancel</button><button class="primary" id="saveEdit">Save changes</button></div>`;
   }
@@ -4004,7 +4043,7 @@ function editLocalProfile(){
 
   function bindLrcEditor(trackId){
     const open=$("#openLrcEditor"),panel=$("#lrcInline"),textarea=$("#songLyrics");if(!open||!panel||!textarea)return;
-    let selectedLine=-1,selectedWords=new Set(),lastWord=-1,lines=[],wordTimes=[];
+    let selectedLine=-1,selectedWords=new Set(),lastWord=-1,lines=[],wordTimes=[],selectionMode=state.settings.lrcSelectionMode==="sentences"?"sentences":"words";
     const timeText=sec=>{sec=Math.max(0,Number(sec)||0);return String(Math.floor(sec/60)).padStart(2,"0")+":"+((sec%60).toFixed(2)).padStart(5,"0")};
     const parse=()=>{
       lines=[];wordTimes=[];
@@ -4018,17 +4057,19 @@ function editLocalProfile(){
       });
     };
     const render=()=>{
-      $("#lrcLines").innerHTML=lines.map((line,i)=>'<div class="lrcLine '+(selectedLine===i?"selected":"")+'" data-lrc-line="'+i+'"><span class="lrcLineTime">'+(line.time===null?"— —":timeText(line.time))+'</span><span class="lrcLineWords">'+wordTimes[i].map((w,j)=>/^\s+$/.test(w.word)?esc(w.word):'<button type="button" class="lrcWord '+(selectedLine===i&&selectedWords.has(j)?"selected":"")+'" data-lrc-word="'+j+'">'+esc(w.word||"·")+'</button>').join("")+'</span></div>').join("");
-      $("#lrcSelectionHint").textContent=selectedLine<0?"Select a line or one or more words to timestamp them.":selectedWords.size?selectedWords.size+" word"+(selectedWords.size===1?"":"s")+" selected · set their timestamp.":"Line selected · set its timestamp.";
+      const mode=$("#lrcSelectionMode");if(mode)mode.value=selectionMode;
+      $("#lrcLines").innerHTML=lines.map((line,i)=>'<div class="lrcLine '+(selectedLine===i?"selected":"")+'" data-lrc-line="'+i+'"><span class="lrcLineTime">'+(line.time===null?"— —":timeText(line.time))+'</span><span class="lrcLineWords">'+wordTimes[i].map((w,j)=>/^\s+$/.test(w.word)?esc(w.word):selectionMode==="words"?'<button type="button" class="lrcWord '+(selectedLine===i&&selectedWords.has(j)?"selected":"")+'" data-lrc-word="'+j+'">'+esc(w.word||"·")+'</button>':'<span class="lrcWord">'+esc(w.word||"·")+'</span>').join("")+'</span></div>').join("");
+      $("#lrcSelectionHint").textContent=selectedLine<0?(selectionMode==="words"?"Click a word to select it. Use Ctrl/Cmd-click or Shift-click to select multiple words.":"Click a sentence to select the whole line."):(selectedWords.size?selectedWords.size+" word"+(selectedWords.size===1?"":"s")+" selected · set their timestamp.":"Sentence selected · set its timestamp.");
     };
     const currentTime=()=>audio.dataset.localifyTrackId===trackId?audio.currentTime:0,refreshClock=()=>{$("#lrcLiveTime").textContent=timeText(currentTime())};
     const setAtCurrent=()=>{if(selectedLine<0){toast("Select a lyric line or word first.");return}if(selectedWords.size){selectedWords.forEach(j=>{if(wordTimes[selectedLine][j])wordTimes[selectedLine][j].time=currentTime()})}else lines[selectedLine].time=currentTime();render();markDirty();refreshClock()};
     const toLrc=()=>lines.map((line,i)=>{const prefix=line.time===null?"":"["+timeText(line.time)+"]",words=wordTimes[i];return words.some(w=>w.time!==null)?prefix+words.map(w=>(w.time===null?"":"<"+timeText(w.time)+">")+w.word).join(""):prefix+line.body}).join("\n");
     const applyImported=content=>{textarea.value=content.replace(/^\uFEFF/,"").replace(/\r\n?/g,"\n");parse();selectedLine=-1;selectedWords.clear();lastWord=-1;render();markDirty();toast("LRC imported. Save changes to keep it.")};
     open.onclick=()=>{parse();selectedLine=-1;selectedWords.clear();lastWord=-1;panel.hidden=!panel.hidden;if(!panel.hidden){render();refreshClock();panel.scrollIntoView({block:"nearest",behavior:"smooth"})}};
+    $("#lrcSelectionMode").onchange=async e=>{selectionMode=e.target.value==="sentences"?"sentences":"words";state.settings.lrcSelectionMode=selectionMode;selectedLine=-1;selectedWords.clear();lastWord=-1;render();await save()};
     $("#lrcLines").onclick=e=>{
       const row=e.target.closest("[data-lrc-line]");if(!row)return;
-      const lineIndex=Number(row.dataset.lrcLine),word=e.target.closest("[data-lrc-word]");
+      const lineIndex=Number(row.dataset.lrcLine),word=selectionMode==="words"?e.target.closest("[data-lrc-word]"):null;
       if(!word){selectedLine=lineIndex;selectedWords.clear();lastWord=-1;render();return}
       const wordIndex=Number(word.dataset.lrcWord);
       if(selectedLine!==lineIndex){selectedLine=lineIndex;selectedWords.clear();lastWord=-1}
