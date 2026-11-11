@@ -3593,8 +3593,8 @@ function editLocalProfile(){
           '<section class="settingsSection">'+
             '<div class="settingsSectionHead"><div><div class="settingsSectionTitle">Themes</div><div class="settingsSectionSub">Choose a colourful gradient theme for the whole Localify interface. Your choice is saved on this device.</div></div></div>'+
             '<div class="themeGrid">'+allLocalifyThemes().map(t=>'<button type="button" class="themeChoice '+((state.settings.theme||"blue")===t.id?"active":"")+'" data-theme="'+esc(t.id)+'"><div class="themeSwatch" style="background:'+esc(t.swatch||("linear-gradient(120deg,"+t.a+","+t.b+")"))+'"></div><strong>'+esc(t.name)+'</strong><span>'+esc(t.desc||"Custom theme")+'</span></button>').join("")+'</div>'+
-            '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><button type="button" class="primary" id="createCustomTheme">Create custom theme</button><button type="button" class="secondary" id="deleteCustomTheme">Delete selected custom theme</button></div>'+
-            '<div class="settingsSectionSub" style="margin-top:10px">Choose a theme, then customise its colours, RGB values and background image. Your themes are saved on this device.</div>'+
+            '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><button type="button" class="primary" id="createCustomTheme">Create custom theme</button><button type="button" class="secondary" id="deleteCustomTheme">Delete selected custom theme</button><button type="button" class="secondary" id="exportCustomThemes">Export custom themes</button><button type="button" class="secondary" id="importCustomThemes">Import custom themes</button><input type="file" id="customThemesImportFile" accept=".json,application/json" hidden></div>'+
+            '<div class="settingsSectionSub" style="margin-top:10px">Choose a theme, then customise its colours, RGB values and background image. Export themes as a JSON file to back them up or share them.</div>'+
             '<div id="customThemeEditor" style="margin-top:14px"></div>'+
           '</section>'+
           '<section class="settingsSection">'+
@@ -3677,6 +3677,40 @@ function editLocalProfile(){
       if(!isCustom){toast("Select one of your custom themes first.");return}
       state.settings.customThemes=(state.settings.customThemes||[]).filter(t=>t.id!==theme.id);
       state.settings.theme="blue";applyTheme();await save();showAccountSettings();
+    };
+    const exportButton=$("#exportCustomThemes"),importButton=$("#importCustomThemes"),importInput=$("#customThemesImportFile");
+    if(exportButton)exportButton.onclick=()=>{
+      const themes=Array.isArray(state.settings.customThemes)?state.settings.customThemes:[];
+      if(!themes.length){toast("Create a custom theme before exporting.");return}
+      const payload={format:"LocalifyThemes",version:1,themes};
+      const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
+      const url=URL.createObjectURL(blob),link=document.createElement("a");
+      link.href=url;link.download="Localify-custom-themes.json";document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+      toast("Custom themes exported.");
+    };
+    if(importButton&&importInput)importButton.onclick=()=>{importInput.value="";importInput.click()};
+    if(importInput)importInput.onchange=async()=>{
+      const file=importInput.files?.[0];if(!file)return;
+      if(file.size>12*1024*1024){toast("Theme file is too large (12 MB maximum).");return}
+      try{
+        const parsed=JSON.parse(await file.text());
+        const incoming=Array.isArray(parsed)?parsed:parsed?.themes;
+        if((parsed?.format&&parsed.format!=="LocalifyThemes")||!Array.isArray(incoming)||!incoming.length||incoming.length>100)throw new Error("This is not a valid Localify theme file.");
+        const allowed=["bg","panel","panel2","panel3","sidebar","border","text","muted","a","b"];
+        const clean=incoming.map((raw,index)=>{
+          if(!raw||typeof raw!=="object")throw new Error("A theme entry is invalid.");
+          const t={id:"custom-"+uid(),name:String(raw.name||("Imported Theme "+(index+1))).slice(0,32),desc:"Imported custom theme"};
+          for(const key of allowed){const value=raw[key];if(value!==undefined){if(typeof value!=="string"||!/^#[0-9a-f]{6}$/i.test(value))throw new Error("A theme contains an invalid colour.");t[key]=value}}
+          for(const key of ["bg","panel","panel2","panel3","sidebar","border","a","b"])if(!t[key])throw new Error("A theme is missing required colours.");
+          t.c=t.b;t.hover=typeof raw.hover==="string"&&/^#[0-9a-f]{6}$/i.test(raw.hover)?raw.hover:t.panel3;
+          t.swatch="linear-gradient(120deg,"+t.a+","+t.b+")";
+          if(typeof raw.image==="string"&&raw.image.startsWith("data:image/")&&raw.image.length<10*1024*1024)t.image=raw.image;
+          return t;
+        });
+        state.settings.customThemes=[...(state.settings.customThemes||[]),...clean];
+        state.settings.theme=clean[0].id;applyTheme();await save();showAccountSettings();
+        toast("Imported "+clean.length+" custom theme"+(clean.length===1?"":"s")+".");
+      }catch(error){console.warn("Custom theme import failed",error);toast(error.message||"Could not import that theme file.");}
     };
     editor.querySelectorAll("[data-theme-color]").forEach(input=>input.oninput=async()=>{
       if(!isCustom)return;
