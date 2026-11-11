@@ -987,7 +987,7 @@ body.theme-gradient .lrcInline{background:linear-gradient(135deg,var(--panel2),v
   const state = {
     version: 12, tracks: [], albums: [], artists: [], playlists: [], folders: [], liked: [], recent: [],
     queue: [], queueIndex: -1, currentId: null, libraryFolderHandle: null,
-    settings: { volume:.9, shuffle:false, repeat:"off", eq:{bass:0,mid:0,treble:0,gain:0,preset:"flat",compressor:true}, discordPresence:true, nowSidebarHidden:false, theme:"aurora", lrcSelectionMode:"words" },
+    settings: { volume:.9, shuffle:false, repeat:"off", eq:{bass:0,mid:0,treble:0,gain:0,preset:"flat",compressor:true}, discordPresence:true, nowSidebarHidden:false, theme:"blue", lrcSelectionMode:"words" },
     profile: { displayName:"", avatar:null },
     analytics: { totalSeconds:0, plays:{}, trackSeconds:{}, days:{}, history:[] },
     currentView:"home", search:"", searchFilter:"all", librarySort:"added", librarySortDir:"desc",
@@ -1724,7 +1724,7 @@ body.theme-gradient .lrcInline{background:linear-gradient(135deg,var(--panel2),v
     let restored=false;
     try{restored=await restoreSaved()}catch(e){console.warn("Localify restore failed",e)}
     try{state.libraryFolderHandle=await idbGetLibraryFolderHandle()}catch{state.libraryFolderHandle=null}
-    state.settings=Object.assign({volume:.9,shuffle:false,repeat:"off",eq:{bass:0,mid:0,treble:0,gain:0,preset:"flat",compressor:true},discordPresence:true,nowSidebarHidden:false,theme:"aurora",lrcSelectionMode:"words"},state.settings||{});if(typeof state.settings.theme!=="string"||!localifyThemes.some(t=>t.id===state.settings.theme))state.settings.theme="aurora";if(!["words","sentences"].includes(state.settings.lrcSelectionMode))state.settings.lrcSelectionMode="words";
+    state.settings=Object.assign({volume:.9,shuffle:false,repeat:"off",eq:{bass:0,mid:0,treble:0,gain:0,preset:"flat",compressor:true},discordPresence:true,nowSidebarHidden:false,theme:"blue",lrcSelectionMode:"words"},state.settings||{});if(typeof state.settings.theme!=="string"||!localifyThemes.some(t=>t.id===state.settings.theme))state.settings.theme="blue";if(!["words","sentences"].includes(state.settings.lrcSelectionMode))state.settings.lrcSelectionMode="words";
     state.settings.shuffle=(state.settings.shuffle===true||state.settings.shuffle===1||state.settings.shuffle==="true");
 
     state.settings.eq=Object.assign({bass:0,mid:0,treble:0,gain:0,preset:"flat",compressor:true},state.settings.eq||{});
@@ -3571,7 +3571,7 @@ function editLocalProfile(){
         '<div class="settingsGrid">'+
           '<section class="settingsSection">'+
             '<div class="settingsSectionHead"><div><div class="settingsSectionTitle">Themes</div><div class="settingsSectionSub">Choose a colourful gradient theme for the whole Localify interface. Your choice is saved on this device.</div></div></div>'+
-            '<div class="themeGrid">'+localifyThemes.map(t=>'<button type="button" class="themeChoice '+((state.settings.theme||"aurora")===t.id?"active":"")+'" data-theme="'+t.id+'"><div class="themeSwatch" style="background:'+t.swatch+'"></div><strong>'+t.name+'</strong><span>'+t.desc+'</span></button>').join("")+'</div>'+
+            '<div class="themeGrid">'+localifyThemes.map(t=>'<button type="button" class="themeChoice '+((state.settings.theme||"blue")===t.id?"active":"")+'" data-theme="'+t.id+'"><div class="themeSwatch" style="background:'+t.swatch+'"></div><strong>'+t.name+'</strong><span>'+t.desc+'</span></button>').join("")+'</div>'+
             '<div class="settingsSectionSub" style="margin-top:10px">Gradients and accent colours flow through buttons, cards, navigation, playback and menus.</div>'+
           '</section>'+
           '<section class="settingsSection">'+
