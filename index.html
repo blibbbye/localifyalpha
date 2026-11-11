@@ -869,6 +869,18 @@ main{min-width:0;min-height:0}
     /* Keep the supplied brand artwork exact; theme colours must not recolour the logo. */
 .logo{background:transparent!important;background-image:none!important;box-shadow:none!important;overflow:hidden}
 .logo .logoMarkImage{display:block;width:100%;height:100%;padding:0;object-fit:contain;mix-blend-mode:normal;filter:none}
+  .customThemeEditor{display:grid;gap:12px;padding:14px;border:1px solid #29313b;border-radius:14px;background:#0d1217}
+  .customThemeEditorHead{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+  .customThemeEditorHead strong{font-size:13px}
+  .customThemeFields{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:9px}
+  .customThemeField{display:grid;gap:5px;min-width:0}
+  .customThemeField label{font-size:10px;color:#87919e;font-weight:850;text-transform:uppercase;letter-spacing:.07em}
+  .customThemeColorRow{display:grid;grid-template-columns:40px minmax(0,1fr);gap:7px;align-items:center}
+  .customThemeColorRow input[type=color]{width:40px;height:35px;padding:2px;border:1px solid #303946;border-radius:8px;background:#111820;cursor:pointer}
+  .customThemeColorRow input[type=text]{width:100%;min-width:0;background:#111820;border:1px solid #303946;border-radius:8px;padding:9px;color:#e5eaf0;font:11px ui-monospace,monospace}
+  .customThemeImageRow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .customThemeImagePreview{width:100%;height:110px;border:1px solid #303946;border-radius:10px;object-fit:cover;background:#111820}
+  @media(max-width:600px){.customThemeFields{grid-template-columns:1fr}}
 </style>
 <style id="localify-colour-themes">
 :root{--theme-transition:background-color .45s ease,border-color .4s ease,color .3s ease,box-shadow .4s ease}
@@ -1004,11 +1016,17 @@ body.theme-gradient .lrcInline{background:linear-gradient(135deg,var(--panel2),v
     {id:"teal",name:"Teal",desc:"Dark teal with a muted aqua accent",a:"#65a9a5",b:"#3d7477",c:"#3d7477",bg:"#091415",panel:"#101f20",panel2:"#172a2b",panel3:"#203839",sidebar:"#0b191a",border:"#2a494a",hover:"#1a3334",swatch:"linear-gradient(120deg,#65a9a5,#3d7477)"},
     {id:"grey",name:"Grey",desc:"Almost black with cool grey accents",a:"#a0aab8",b:"#596575",c:"#596575",bg:"#0c0f13",panel:"#15191f",panel2:"#1d232b",panel3:"#282f39",sidebar:"#101419",border:"#343d49",hover:"#252d37",swatch:"linear-gradient(120deg,#a0aab8,#596575)"}
   ];
+  function allLocalifyThemes(){
+    return [...localifyThemes,...(Array.isArray(state.settings.customThemes)?state.settings.customThemes:[])];
+  }
+  function activeLocalifyTheme(){
+    return allLocalifyThemes().find(x=>x.id===state.settings.theme)||localifyThemes[0];
+  }
   function applyTheme(){
     const root=document.documentElement;
-    const t=localifyThemes.find(x=>x.id===state.settings.theme)||localifyThemes[0];
+    const t=activeLocalifyTheme();
     const vars={
-      "--bg":t.bg,"--panel":t.panel,"--panel2":t.panel2,"--panel3":t.panel3,"--line":t.border,
+      "--bg":t.bg,"--panel":t.panel,"--panel2":t.panel2,"--panel3":t.panel3,"--line":t.border,"--text":t.text||"#f7f7f8","--muted":t.muted||"#9ca3af",
       "--theme-sidebar":t.sidebar,"--theme-border":t.border,"--theme-hover":t.hover,
       "--theme-a":t.a,"--theme-b":t.b,"--accent":t.a,"--accent2":t.b,
       "--theme-soft":"color-mix(in srgb,"+t.a+" 13%,transparent)","--theme-soft-2":"color-mix(in srgb,"+t.b+" 8%,transparent)",
@@ -1020,9 +1038,11 @@ body.theme-gradient .lrcInline{background:linear-gradient(135deg,var(--panel2),v
     for(const [key,value] of Object.entries(vars))root.style.setProperty(key,value);
     document.body.classList.add("theme-gradient");
     document.body.dataset.theme=t.id;
+    const main=$("#main");
+    if(main){main.style.backgroundImage=t.image?"linear-gradient(rgba(8,10,13,.78),rgba(8,10,13,.84)),url("+JSON.stringify(t.image)+")":"";main.style.backgroundSize=t.image?"cover":"";main.style.backgroundPosition=t.image?"center":"";main.style.backgroundAttachment=t.image?"fixed":"";}
   }
   async function chooseTheme(id){
-    if(!localifyThemes.some(t=>t.id===id))return;
+    if(!allLocalifyThemes().some(t=>t.id===id))return;
     state.settings.theme=id;applyTheme();await save();
     $$(".themeChoice").forEach(b=>b.classList.toggle("active",b.dataset.theme===id));
   }
@@ -1724,7 +1744,7 @@ body.theme-gradient .lrcInline{background:linear-gradient(135deg,var(--panel2),v
     let restored=false;
     try{restored=await restoreSaved()}catch(e){console.warn("Localify restore failed",e)}
     try{state.libraryFolderHandle=await idbGetLibraryFolderHandle()}catch{state.libraryFolderHandle=null}
-    state.settings=Object.assign({volume:.9,shuffle:false,repeat:"off",eq:{bass:0,mid:0,treble:0,gain:0,preset:"flat",compressor:true},discordPresence:true,nowSidebarHidden:false,theme:"blue",lrcSelectionMode:"words"},state.settings||{});if(typeof state.settings.theme!=="string"||!localifyThemes.some(t=>t.id===state.settings.theme))state.settings.theme="blue";if(!["words","sentences"].includes(state.settings.lrcSelectionMode))state.settings.lrcSelectionMode="words";
+    state.settings=Object.assign({volume:.9,shuffle:false,repeat:"off",eq:{bass:0,mid:0,treble:0,gain:0,preset:"flat",compressor:true},discordPresence:true,nowSidebarHidden:false,theme:"blue",lrcSelectionMode:"words"},state.settings||{});if(!Array.isArray(state.settings.customThemes))state.settings.customThemes=[];if(typeof state.settings.theme!=="string"||!allLocalifyThemes().some(t=>t.id===state.settings.theme))state.settings.theme="blue";if(!["words","sentences"].includes(state.settings.lrcSelectionMode))state.settings.lrcSelectionMode="words";
     state.settings.shuffle=(state.settings.shuffle===true||state.settings.shuffle===1||state.settings.shuffle==="true");
 
     state.settings.eq=Object.assign({bass:0,mid:0,treble:0,gain:0,preset:"flat",compressor:true},state.settings.eq||{});
@@ -3636,6 +3656,59 @@ function editLocalProfile(){
         await unlockPersistentStorage();
       }catch(e){console.warn("Localify storage check failed",e);toast("Could not check persistent storage in this browser.");}
     };
+  }
+
+  function bindCustomThemeEditor(){
+    const editor=$("#customThemeEditor"),create=$("#createCustomTheme"),remove=$("#deleteCustomTheme");
+    if(!editor)return;
+    const theme=activeLocalifyTheme(),isCustom=(state.settings.customThemes||[]).some(t=>t.id===theme.id);
+    const fields=[["bg","Background"],["panel","Main panels"],["panel2","Raised panels"],["panel3","Cards / surfaces"],["sidebar","Sidebar"],["border","Borders"],["text","Main text"],["muted","Muted text"],["a","Accent 1"],["b","Accent 2"]];
+    editor.innerHTML='<div class="customThemeEditor"><div class="customThemeEditorHead"><strong>Customise: '+esc(theme.name)+'</strong><span class="settingsSectionSub">'+(isCustom?"Your custom theme":"Built-in themes stay unchanged — create a copy to edit them.")+'</span></div>'+
+      (isCustom?'<div class="customThemeFields">'+fields.map(([key,label])=>{const value=/^#[0-9a-f]{6}$/i.test(theme[key]||"")?theme[key]:"#888888";return '<div class="customThemeField"><label>'+label+'</label><div class="customThemeColorRow"><input type="color" data-theme-color="'+key+'" value="'+value+'"><input type="text" data-theme-hex="'+key+'" value="'+value+'" maxlength="7" aria-label="'+label+' hex colour"></div></div>'}).join("")+'</div>'+
+      '<div><div class="customThemeField"><label>Background image</label><div class="customThemeImageRow"><input type="file" id="customThemeImage" accept="image/*"><button type="button" class="secondary" id="clearCustomThemeImage">Remove image</button></div>'+(theme.image?'<img class="customThemeImagePreview" src="'+theme.image+'" alt="Theme background preview">':'<div class="settingsSectionSub">Upload an image to use as a subtle full-app background.</div>')+'</div></div>':
+      '<div class="settingsSectionSub">Press “Create custom theme” to make an editable copy of this theme. You can then change every colour and upload a background image.</div>')+
+      '</div>';
+    if(create)create.onclick=async()=>{
+      const base=activeLocalifyTheme(),copy={...base,id:"custom-"+uid(),name:"My Theme",desc:"My custom colours",swatch:"linear-gradient(120deg,"+(base.a||"#6096c8")+","+(base.b||"#354f78")+")",image:""};
+      state.settings.customThemes=[...(state.settings.customThemes||[]),copy];state.settings.theme=copy.id;await save();showAccountSettings();
+    };
+    if(remove)remove.onclick=async()=>{
+      if(!isCustom){toast("Select one of your custom themes first.");return}
+      state.settings.customThemes=(state.settings.customThemes||[]).filter(t=>t.id!==theme.id);
+      state.settings.theme="blue";applyTheme();await save();showAccountSettings();
+    };
+    editor.querySelectorAll("[data-theme-color]").forEach(input=>input.oninput=async()=>{
+      if(!isCustom)return;
+      const key=input.dataset.themeColor,value=input.value,custom=state.settings.customThemes.find(t=>t.id===theme.id);if(!custom)return;
+      custom[key]=value;
+      if(key==="a"||key==="b"){custom.swatch="linear-gradient(120deg,"+custom.a+","+custom.b+")";custom.c=custom.b}
+      const hex=editor.querySelector('[data-theme-hex="'+key+'"]');if(hex)hex.value=value;
+      applyTheme();await save();
+    });
+    editor.querySelectorAll("[data-theme-hex]").forEach(input=>input.onchange=async()=>{
+      if(!isCustom)return;
+      const value=input.value.trim(),key=input.dataset.themeHex;
+      if(!/^#[0-9a-f]{6}$/i.test(value)){input.value=theme[key]||"#888888";return}
+      const custom=state.settings.customThemes.find(t=>t.id===theme.id);if(!custom)return;
+      custom[key]=value;const picker=editor.querySelector('[data-theme-color="'+key+'"]');if(picker)picker.value=value;
+      if(key==="a"||key==="b"){custom.swatch="linear-gradient(120deg,"+custom.a+","+custom.b+")";custom.c=custom.b}
+      applyTheme();await save();showAccountSettings();
+    });
+    const imageInput=$("#customThemeImage");
+    if(imageInput)imageInput.onchange=async()=>{
+      if(!isCustom||!imageInput.files?.[0])return;
+      const file=imageInput.files[0];if(!file.type.startsWith("image/")){toast("Choose an image file.");return}
+      try{
+        const data=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result));reader.onerror=reject;reader.readAsDataURL(file)});
+        const img=await new Promise((resolve,reject)=>{const el=new Image();el.onload=()=>resolve(el);el.onerror=reject;el.src=data});
+        const scale=Math.min(1,1800/Math.max(img.width,img.height)),canvas=document.createElement("canvas");canvas.width=Math.max(1,Math.round(img.width*scale));canvas.height=Math.max(1,Math.round(img.height*scale));
+        const ctx=canvas.getContext("2d");ctx.drawImage(img,0,0,canvas.width,canvas.height);
+        const custom=state.settings.customThemes.find(t=>t.id===theme.id);custom.image=canvas.toDataURL("image/jpeg",.82);
+        applyTheme();await save();showAccountSettings();toast("Theme background image saved.");
+      }catch(e){console.warn("Theme image upload failed",e);toast("Could not load that image.");}
+    };
+    const clear=$("#clearCustomThemeImage");
+    if(clear)clear.onclick=async()=>{const custom=state.settings.customThemes.find(t=>t.id===theme.id);if(custom){custom.image="";applyTheme();await save();showAccountSettings()}};
   }
 
   function openSettingsPanel(){showAccountSettings()}
