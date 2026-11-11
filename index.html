@@ -877,7 +877,8 @@ main{min-width:0;min-height:0}
   .customThemeField label{font-size:10px;color:#87919e;font-weight:850;text-transform:uppercase;letter-spacing:.07em}
   .customThemeColorRow{display:grid;grid-template-columns:40px minmax(0,1fr);gap:7px;align-items:center}
   .customThemeColorRow input[type=color]{width:40px;height:35px;padding:2px;border:1px solid #303946;border-radius:8px;background:#111820;cursor:pointer}
-  .customThemeColorRow input[type=text]{width:100%;min-width:0;background:#111820;border:1px solid #303946;border-radius:8px;padding:9px;color:#e5eaf0;font:11px ui-monospace,monospace}
+  .customThemeColorRow>div{display:grid;grid-template-columns:1fr;gap:5px;min-width:0}
+  .customThemeColorRow input[type=text]{width:100%;min-width:0;background:#111820;border:1px solid #303946;border-radius:8px;padding:8px;color:#e5eaf0;font:11px ui-monospace,monospace}
   .customThemeImageRow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
   .customThemeImagePreview{width:100%;height:110px;border:1px solid #303946;border-radius:10px;object-fit:cover;background:#111820}
   @media(max-width:600px){.customThemeFields{grid-template-columns:1fr}}
@@ -3664,7 +3665,7 @@ function editLocalProfile(){
     const theme=activeLocalifyTheme(),isCustom=(state.settings.customThemes||[]).some(t=>t.id===theme.id);
     const fields=[["bg","Background"],["panel","Main panels"],["panel2","Raised panels"],["panel3","Cards / surfaces"],["sidebar","Sidebar"],["border","Borders"],["text","Main text"],["muted","Muted text"],["a","Accent 1"],["b","Accent 2"]];
     editor.innerHTML='<div class="customThemeEditor"><div class="customThemeEditorHead"><strong>Customise: '+esc(theme.name)+'</strong><span class="settingsSectionSub">'+(isCustom?"Your custom theme":"Built-in themes stay unchanged — create a copy to edit them.")+'</span></div>'+
-      (isCustom?'<div class="customThemeFields">'+fields.map(([key,label])=>{const value=/^#[0-9a-f]{6}$/i.test(theme[key]||"")?theme[key]:"#888888";return '<div class="customThemeField"><label>'+label+'</label><div class="customThemeColorRow"><input type="color" data-theme-color="'+key+'" value="'+value+'"><input type="text" data-theme-hex="'+key+'" value="'+value+'" maxlength="7" aria-label="'+label+' hex colour"></div></div>'}).join("")+'</div>'+
+      (isCustom?'<div class="customThemeField"><label>Theme name</label><input type="text" id="customThemeName" maxlength="32" value="'+esc(theme.name)+'" style="background:#111820;border:1px solid #303946;border-radius:8px;padding:10px;color:#e5eaf0"></div><div class="customThemeFields">'+fields.map(([key,label])=>{const value=/^#[0-9a-f]{6}$/i.test(theme[key]||"")?theme[key]:"#888888",n=parseInt(value.slice(1),16),rgb=[(n>>16)&255,(n>>8)&255,n&255].join(", ");return '<div class="customThemeField"><label>'+label+'</label><div class="customThemeColorRow"><input type="color" data-theme-color="'+key+'" value="'+value+'"><div><input type="text" data-theme-hex="'+key+'" value="'+value+'" maxlength="7" aria-label="'+label+' hex colour"><input type="text" data-theme-rgb="'+key+'" value="'+rgb+'" aria-label="'+label+' RGB values" placeholder="R, G, B"></div></div></div>'}).join("")+'</div>'+
       '<div><div class="customThemeField"><label>Background image</label><div class="customThemeImageRow"><input type="file" id="customThemeImage" accept="image/*"><button type="button" class="secondary" id="clearCustomThemeImage">Remove image</button></div>'+(theme.image?'<img class="customThemeImagePreview" src="'+theme.image+'" alt="Theme background preview">':'<div class="settingsSectionSub">Upload an image to use as a subtle full-app background.</div>')+'</div></div>':
       '<div class="settingsSectionSub">Press “Create custom theme” to make an editable copy of this theme. You can then change every colour and upload a background image.</div>')+
       '</div>';
@@ -3683,6 +3684,7 @@ function editLocalProfile(){
       custom[key]=value;
       if(key==="a"||key==="b"){custom.swatch="linear-gradient(120deg,"+custom.a+","+custom.b+")";custom.c=custom.b}
       const hex=editor.querySelector('[data-theme-hex="'+key+'"]');if(hex)hex.value=value;
+      const rgb=editor.querySelector('[data-theme-rgb="'+key+'"]');if(rgb){const n=parseInt(value.slice(1),16);rgb.value=[(n>>16)&255,(n>>8)&255,n&255].join(", ")}
       applyTheme();await save();
     });
     editor.querySelectorAll("[data-theme-hex]").forEach(input=>input.onchange=async()=>{
@@ -3691,6 +3693,17 @@ function editLocalProfile(){
       if(!/^#[0-9a-f]{6}$/i.test(value)){input.value=theme[key]||"#888888";return}
       const custom=state.settings.customThemes.find(t=>t.id===theme.id);if(!custom)return;
       custom[key]=value;const picker=editor.querySelector('[data-theme-color="'+key+'"]');if(picker)picker.value=value;
+      if(key==="a"||key==="b"){custom.swatch="linear-gradient(120deg,"+custom.a+","+custom.b+")";custom.c=custom.b}
+      applyTheme();await save();showAccountSettings();
+    });
+    const nameInput=$("#customThemeName");
+    if(nameInput)nameInput.onchange=async()=>{const custom=state.settings.customThemes.find(t=>t.id===theme.id);if(custom){custom.name=nameInput.value.trim().slice(0,32)||"My Theme";await save();showAccountSettings()}};
+    editor.querySelectorAll("[data-theme-rgb]").forEach(input=>input.onchange=async()=>{
+      if(!isCustom)return;
+      const parts=input.value.split(/[ ,]+/).filter(Boolean).map(Number);
+      if(parts.length!==3||parts.some(n=>!Number.isInteger(n)||n<0||n>255)){input.value="";toast("Enter RGB values from 0 to 255, like 40, 120, 200.");return}
+      const value="#"+parts.map(n=>n.toString(16).padStart(2,"0")).join(""),key=input.dataset.themeRgb,custom=state.settings.customThemes.find(t=>t.id===theme.id);if(!custom)return;
+      custom[key]=value;const picker=editor.querySelector('[data-theme-color="'+key+'"]'),hex=editor.querySelector('[data-theme-hex="'+key+'"]');if(picker)picker.value=value;if(hex)hex.value=value;
       if(key==="a"||key==="b"){custom.swatch="linear-gradient(120deg,"+custom.a+","+custom.b+")";custom.c=custom.b}
       applyTheme();await save();showAccountSettings();
     });
