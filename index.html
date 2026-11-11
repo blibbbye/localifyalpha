@@ -3571,8 +3571,10 @@ function editLocalProfile(){
         '<div class="settingsGrid">'+
           '<section class="settingsSection">'+
             '<div class="settingsSectionHead"><div><div class="settingsSectionTitle">Themes</div><div class="settingsSectionSub">Choose a colourful gradient theme for the whole Localify interface. Your choice is saved on this device.</div></div></div>'+
-            '<div class="themeGrid">'+localifyThemes.map(t=>'<button type="button" class="themeChoice '+((state.settings.theme||"blue")===t.id?"active":"")+'" data-theme="'+t.id+'"><div class="themeSwatch" style="background:'+t.swatch+'"></div><strong>'+t.name+'</strong><span>'+t.desc+'</span></button>').join("")+'</div>'+
-            '<div class="settingsSectionSub" style="margin-top:10px">Gradients and accent colours flow through buttons, cards, navigation, playback and menus.</div>'+
+            '<div class="themeGrid">'+allLocalifyThemes().map(t=>'<button type="button" class="themeChoice '+((state.settings.theme||"blue")===t.id?"active":"")+'" data-theme="'+esc(t.id)+'"><div class="themeSwatch" style="background:'+esc(t.swatch||("linear-gradient(120deg,"+t.a+","+t.b+")"))+'"></div><strong>'+esc(t.name)+'</strong><span>'+esc(t.desc||"Custom theme")+'</span></button>').join("")+'</div>'+
+            '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><button type="button" class="primary" id="createCustomTheme">Create custom theme</button><button type="button" class="secondary" id="deleteCustomTheme">Delete selected custom theme</button></div>'+
+            '<div class="settingsSectionSub" style="margin-top:10px">Choose a theme, then customise its colours, RGB values and background image. Your themes are saved on this device.</div>'+
+            '<div id="customThemeEditor" style="margin-top:14px"></div>'+
           '</section>'+
           '<section class="settingsSection">'+
             '<div class="settingsSectionHead"><div><div class="settingsSectionTitle">Discord Rich Presence</div><div class="settingsSectionSub">Connect the Localify Discord Connector and control what appears in Discord.</div></div></div>'+
@@ -3594,7 +3596,8 @@ function editLocalProfile(){
       '</div>';
     const back=$("#accountSettingsBack");
     if(back)back.onclick=()=>showProfile();
-    $$(".themeChoice").forEach(button=>button.onclick=()=>chooseTheme(button.dataset.theme));
+    $(".themeChoice").forEach(button=>button.onclick=()=>chooseTheme(button.dataset.theme).then(()=>showAccountSettings()));
+    bindCustomThemeEditor();
     const discord=$("#accountDiscord");
     if(discord)discord.onchange=async e=>{
       state.settings.discordPresence=!!e.target.checked;
