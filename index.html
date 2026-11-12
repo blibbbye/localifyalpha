@@ -4412,7 +4412,7 @@ function editLocalProfile(){
     // Add matching entries here when you create new backups above.
     const options=[["flat","Flat"],["bass","Bass"]];
     setModal(`
-      <div class="modalHead"><h2>Sound filters</h2><div style="display:flex;align-items:center;gap:7px"><button class="secondary small" id="eqDownloadProcessed" type="button" title="Download this song with the current effects">↓ Download</button><button class="circle iconOnly" id="closeModal" title="Close" aria-label="Close">${uiIcon("close")}</button></div>
+      <div class="modalHead"><h2>Sound effects</h2><div style="display:flex;align-items:center;gap:7px"><button class="secondary small" id="eqDownloadProcessed" type="button" title="Download this song with the current effects">↓ Download</button><button class="circle iconOnly" id="closeModal" title="Close" aria-label="Close">${uiIcon("close")}</button></div>
       <div class="field"><label for="eqPreset">Preset</label><select id="eqPreset">${options.map(([k,n])=>`<option value="${k}" ${q.preset===k?"selected":""}>${n}</option>`).join("")}</select></div>
       <div class="formGrid" style="margin-top:14px">
         <div class="field"><label for="eqBass" id="eqBassLabel">Bass ${q.bass} dB</label><input class="eqSlider" id="eqBass" type="range" min="-24" max="24" value="${q.bass}" step="1" aria-label="Bass"></div>
