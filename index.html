@@ -869,6 +869,21 @@ main{min-width:0;min-height:0}
     /* Keep the supplied brand artwork exact; theme colours must not recolour the logo. */
 .logo{background:transparent!important;background-image:none!important;box-shadow:none!important;overflow:hidden}
 .logo .logoMarkImage{display:block;width:100%;height:100%;padding:0;object-fit:contain;mix-blend-mode:normal;filter:none}
+  .customThemesHeading{font-size:13px;font-weight:900;margin-top:18px;margin-bottom:9px;color:var(--text)}
+  .customThemesToolbar{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+  .customThemeAdd,.customThemeImport{width:38px;height:38px;border:1px solid #303946;border-radius:11px;background:#111820;color:#e5eaf0;font-size:25px;display:grid;place-items:center;cursor:pointer}
+  .customThemeImport svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+  .customThemeGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(125px,1fr));gap:9px}
+  .customThemeTile{position:relative;display:grid;grid-template-columns:minmax(0,1fr) 30px;align-items:start;gap:4px;padding:7px;border:1px solid #29313b;border-radius:12px;background:#11171d}
+  .customThemeTile.active{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+  .customThemeSelect{min-width:0;text-align:left;background:transparent;border:0;padding:0;color:inherit;cursor:pointer}
+  .customThemeSelect .themeSwatch{display:block;width:100%;height:35px;border-radius:8px;margin-bottom:6px}
+  .customThemeSelect strong{display:block;font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .customThemeMore{width:28px;height:28px;border:0;border-radius:8px;background:#202832;color:#e5eaf0;font-size:21px;line-height:1;cursor:pointer}
+  .customThemeMenu{position:absolute;z-index:20;right:7px;top:38px;min-width:110px;padding:5px;border:1px solid #394451;border-radius:9px;background:#171f28;box-shadow:0 8px 24px #0009}
+  .customThemeMenu[hidden]{display:none}
+  .customThemeMenu button{display:block;width:100%;padding:8px;border:0;border-radius:6px;background:transparent;color:#e5eaf0;text-align:left;font-size:11px;cursor:pointer}
+  .customThemeMenu button:hover{background:#293541}
   .customThemeEditor{display:grid;gap:12px;padding:14px;border:1px solid #29313b;border-radius:14px;background:#0d1217}
   .customThemeEditorHead{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
   .customThemeEditorHead strong{font-size:13px}
@@ -3592,9 +3607,11 @@ function editLocalProfile(){
         '<div class="settingsGrid">'+
           '<section class="settingsSection">'+
             '<div class="settingsSectionHead"><div><div class="settingsSectionTitle">Themes</div><div class="settingsSectionSub">Choose a colourful gradient theme for the whole Localify interface. Your choice is saved on this device.</div></div></div>'+
-            '<div class="themeGrid">'+allLocalifyThemes().map(t=>'<button type="button" class="themeChoice '+((state.settings.theme||"blue")===t.id?"active":"")+'" data-theme="'+esc(t.id)+'"><div class="themeSwatch" style="background:'+esc(t.swatch||("linear-gradient(120deg,"+t.a+","+t.b+")"))+'"></div><strong>'+esc(t.name)+'</strong><span>'+esc(t.desc||"Custom theme")+'</span></button>').join("")+'</div>'+
-            '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><button type="button" class="primary" id="createCustomTheme">Create custom theme</button><button type="button" class="secondary" id="deleteCustomTheme">Delete selected custom theme</button><button type="button" class="secondary" id="exportCustomThemes">Export custom themes</button><button type="button" class="secondary" id="importCustomThemes">Import custom themes</button><input type="file" id="customThemesImportFile" accept=".json,application/json" hidden></div>'+
-            '<div class="settingsSectionSub" style="margin-top:10px">Choose a theme, then customise its colours, RGB values and background image. Export themes as a JSON file to back them up or share them.</div>'+
+            '<div class="themeGrid">'+localifyThemes.map(t=>'<button type="button" class="themeChoice '+((state.settings.theme||"blue")===t.id?"active":"")+'" data-theme="'+esc(t.id)+'"><div class="themeSwatch" style="background:'+esc(t.swatch)+'"></div><strong>'+esc(t.name)+'</strong><span>'+esc(t.desc||"Theme")+'</span></button>').join("")+'</div>'+
+            '<div class="customThemesHeading">Custom Themes</div>'+
+            '<div class="customThemesToolbar"><button type="button" class="customThemeAdd" id="createCustomTheme" aria-label="Add custom theme" title="Add custom theme">+</button><button type="button" class="customThemeImport" id="importCustomThemes" aria-label="Import themes" title="Import themes"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V3m0 0L7 8m5-5 5 5M4 14v6h16v-6"/></svg></button><input type="file" id="customThemesImportFile" accept=".json,application/json" hidden></div>'+
+            '<div class="customThemeGrid" id="customThemeGrid">'+(state.settings.customThemes||[]).map(t=>'<div class="customThemeTile '+(state.settings.theme===t.id?"active":"")+'" data-custom-tile="'+esc(t.id)+'"><button type="button" class="customThemeSelect" data-custom-theme="'+esc(t.id)+'"><span class="themeSwatch" style="background:'+esc(t.swatch||("linear-gradient(120deg,"+t.a+","+t.b+")"))+'"></span><strong>'+esc(t.name)+'</strong></button><button type="button" class="customThemeMore" data-custom-menu="'+esc(t.id)+'" aria-label="More options for '+esc(t.name)+'" title="More options">⋯</button><div class="customThemeMenu" data-custom-menu-panel="'+esc(t.id)+'" hidden><button type="button" data-export-theme="'+esc(t.id)+'">Export</button><button type="button" data-remove-theme="'+esc(t.id)+'">Remove</button></div></div>').join("")+'</div>'+
+            '<div class="settingsSectionSub" style="margin-top:9px">Add a theme with +, or import a theme file. Use ⋯ on a custom theme to export or remove it.</div>'+
             '<div id="customThemeEditor" style="margin-top:14px"></div>'+
           '</section>'+
           '<section class="settingsSection">'+
@@ -3660,7 +3677,7 @@ function editLocalProfile(){
   }
 
   function bindCustomThemeEditor(){
-    const editor=$("#customThemeEditor"),create=$("#createCustomTheme"),remove=$("#deleteCustomTheme");
+    const editor=$("#customThemeEditor"),create=$("#createCustomTheme");
     if(!editor)return;
     const theme=activeLocalifyTheme(),isCustom=(state.settings.customThemes||[]).some(t=>t.id===theme.id);
     const fields=[["bg","Background"],["panel","Main panels"],["panel2","Raised panels"],["panel3","Cards / surfaces"],["sidebar","Sidebar"],["border","Borders"],["text","Main text"],["muted","Muted text"],["a","Accent 1"],["b","Accent 2"]];
@@ -3673,21 +3690,19 @@ function editLocalProfile(){
       const base=activeLocalifyTheme(),copy={...base,id:"custom-"+uid(),name:"My Theme",desc:"My custom colours",swatch:"linear-gradient(120deg,"+(base.a||"#6096c8")+","+(base.b||"#354f78")+")",image:""};
       state.settings.customThemes=[...(state.settings.customThemes||[]),copy];state.settings.theme=copy.id;await save();showAccountSettings();
     };
-    if(remove)remove.onclick=async()=>{
-      if(!isCustom){toast("Select one of your custom themes first.");return}
-      state.settings.customThemes=(state.settings.customThemes||[]).filter(t=>t.id!==theme.id);
-      state.settings.theme="blue";applyTheme();await save();showAccountSettings();
+    const customGrid=$("#customThemeGrid");
+    if(customGrid)customGrid.onclick=async event=>{
+      const menuButton=event.target.closest("[data-custom-menu]");
+      if(menuButton){const id=menuButton.dataset.customMenu,panel=customGrid.querySelector('[data-custom-menu-panel="'+id+'"]');customGrid.querySelectorAll("[data-custom-menu-panel]").forEach(p=>{if(p!==panel)p.hidden=true});if(panel)panel.hidden=!panel.hidden;return}
+      const exportButton=event.target.closest("[data-export-theme]");
+      if(exportButton){const item=(state.settings.customThemes||[]).find(t=>t.id===exportButton.dataset.exportTheme);if(!item)return;const blob=new Blob([JSON.stringify({format:"LocalifyThemes",version:1,themes:[item]},null,2)],{type:"application/json"});const url=URL.createObjectURL(blob),link=document.createElement("a");link.href=url;link.download=(item.name||"Localify-theme").replace(/[^a-z0-9_-]+/gi,"-")+".json";document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);return}
+      const removeButton=event.target.closest("[data-remove-theme]");
+      if(removeButton){const id=removeButton.dataset.removeTheme;state.settings.customThemes=(state.settings.customThemes||[]).filter(t=>t.id!==id);if(state.settings.theme===id){state.settings.theme="blue";applyTheme()}await save();showAccountSettings();return}
+      const selectButton=event.target.closest("[data-custom-theme]");
+      if(selectButton){await chooseTheme(selectButton.dataset.customTheme);showAccountSettings()}
     };
-    const exportButton=$("#exportCustomThemes"),importButton=$("#importCustomThemes"),importInput=$("#customThemesImportFile");
-    if(exportButton)exportButton.onclick=()=>{
-      const themes=Array.isArray(state.settings.customThemes)?state.settings.customThemes:[];
-      if(!themes.length){toast("Create a custom theme before exporting.");return}
-      const payload={format:"LocalifyThemes",version:1,themes};
-      const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
-      const url=URL.createObjectURL(blob),link=document.createElement("a");
-      link.href=url;link.download="Localify-custom-themes.json";document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
-      toast("Custom themes exported.");
-    };
+
+    const importButton=$("#importCustomThemes"),importInput=$("#customThemesImportFile");
     if(importButton&&importInput)importButton.onclick=()=>{importInput.value="";importInput.click()};
     if(importInput)importInput.onchange=async()=>{
       const file=importInput.files?.[0];if(!file)return;
