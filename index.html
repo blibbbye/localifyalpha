@@ -1055,7 +1055,7 @@ body.theme-gradient .lrcInline{background:linear-gradient(135deg,var(--panel2),v
     document.body.classList.add("theme-gradient");
     document.body.dataset.theme=t.id;
     const main=$("#main");
-    if(main){main.style.backgroundImage=t.image?"linear-gradient(rgba(8,10,13,.78),rgba(8,10,13,.84)),url("+JSON.stringify(t.image)+")":"";main.style.backgroundSize=t.image?"cover":"";main.style.backgroundPosition=t.image?"center":"";main.style.backgroundAttachment=t.image?"fixed":"";}
+    if(main){main.style.backgroundImage="";main.style.backgroundSize="";main.style.backgroundPosition="";main.style.backgroundAttachment="";}
   }
   async function chooseTheme(id){
     if(!allLocalifyThemes().some(t=>t.id===id))return;
@@ -3683,8 +3683,8 @@ function editLocalProfile(){
     const fields=[["bg","Background"],["panel","Main panels"],["panel2","Raised panels"],["panel3","Cards / surfaces"],["sidebar","Sidebar"],["border","Borders"],["text","Main text"],["muted","Muted text"],["a","Accent 1"],["b","Accent 2"]];
     editor.innerHTML='<div class="customThemeEditor"><div class="customThemeEditorHead"><strong>Customise: '+esc(theme.name)+'</strong><span class="settingsSectionSub">'+(isCustom?"Your custom theme":"Built-in themes stay unchanged — create a copy to edit them.")+'</span></div>'+
       (isCustom?'<div class="customThemeField"><label>Theme name</label><input type="text" id="customThemeName" maxlength="32" value="'+esc(theme.name)+'" style="background:#111820;border:1px solid #303946;border-radius:8px;padding:10px;color:#e5eaf0"></div><div class="customThemeFields">'+fields.map(([key,label])=>{const value=/^#[0-9a-f]{6}$/i.test(theme[key]||"")?theme[key]:"#888888",n=parseInt(value.slice(1),16),rgb=[(n>>16)&255,(n>>8)&255,n&255].join(", ");return '<div class="customThemeField"><label>'+label+'</label><div class="customThemeColorRow"><input type="color" data-theme-color="'+key+'" value="'+value+'"><div><input type="text" data-theme-hex="'+key+'" value="'+value+'" maxlength="7" aria-label="'+label+' hex colour"><input type="text" data-theme-rgb="'+key+'" value="'+rgb+'" aria-label="'+label+' RGB values" placeholder="R, G, B"></div></div></div>'}).join("")+'</div>'+
-      '<div><div class="customThemeField"><label>Background image</label><div class="customThemeImageRow"><input type="file" id="customThemeImage" accept="image/*"><button type="button" class="secondary" id="clearCustomThemeImage">Remove image</button></div>'+(theme.image?'<img class="customThemeImagePreview" src="'+theme.image+'" alt="Theme background preview">':'<div class="settingsSectionSub">Upload an image to use as a subtle full-app background.</div>')+'</div></div>':
-      '<div class="settingsSectionSub">Press “Create custom theme” to make an editable copy of this theme. You can then change every colour and upload a background image.</div>')+
+      '':
+      '<div class="settingsSectionSub">Press “Create custom theme” to make an editable copy of this theme. You can then change every colour.</div>')+
       '</div>';
     if(create)create.onclick=async()=>{
       const base=activeLocalifyTheme(),copy={...base,id:"custom-"+uid(),name:"My Theme",desc:"My custom colours",swatch:"linear-gradient(120deg,"+(base.a||"#6096c8")+","+(base.b||"#354f78")+")",image:""};
@@ -3756,21 +3756,6 @@ function editLocalProfile(){
       if(key==="a"||key==="b"){custom.swatch="linear-gradient(120deg,"+custom.a+","+custom.b+")";custom.c=custom.b}
       applyTheme();await save();showAccountSettings();
     });
-    const imageInput=$("#customThemeImage");
-    if(imageInput)imageInput.onchange=async()=>{
-      if(!isCustom||!imageInput.files?.[0])return;
-      const file=imageInput.files[0];if(!file.type.startsWith("image/")){toast("Choose an image file.");return}
-      try{
-        const data=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result));reader.onerror=reject;reader.readAsDataURL(file)});
-        const img=await new Promise((resolve,reject)=>{const el=new Image();el.onload=()=>resolve(el);el.onerror=reject;el.src=data});
-        const scale=Math.min(1,1800/Math.max(img.width,img.height)),canvas=document.createElement("canvas");canvas.width=Math.max(1,Math.round(img.width*scale));canvas.height=Math.max(1,Math.round(img.height*scale));
-        const ctx=canvas.getContext("2d");ctx.drawImage(img,0,0,canvas.width,canvas.height);
-        const custom=state.settings.customThemes.find(t=>t.id===theme.id);custom.image=canvas.toDataURL("image/jpeg",.82);
-        applyTheme();await save();showAccountSettings();toast("Theme background image saved.");
-      }catch(e){console.warn("Theme image upload failed",e);toast("Could not load that image.");}
-    };
-    const clear=$("#clearCustomThemeImage");
-    if(clear)clear.onclick=async()=>{const custom=state.settings.customThemes.find(t=>t.id===theme.id);if(custom){custom.image="";applyTheme();await save();showAccountSettings()}};
   }
 
   function openSettingsPanel(){showAccountSettings()}
@@ -4412,7 +4397,7 @@ function editLocalProfile(){
     // Add matching entries here when you create new backups above.
     const options=[["flat","Flat"],["bass","Bass"]];
     setModal(`
-      <div class="modalHead"><h2>Sound effects</h2><div style="display:flex;align-items:center;gap:7px"><button class="secondary small" id="eqDownloadProcessed" type="button" title="Download this song with the current effects">↓ Download</button><button class="circle iconOnly" id="closeModal" title="Close" aria-label="Close">${uiIcon("close")}</button></div>
+      <div class="modalHead" style="display:flex;align-items:center;justify-content:space-between;gap:12px"><h2>Sound effects</h2><div style="display:flex;align-items:center;gap:7px;flex-shrink:0"><button class="primary small" id="eqDownloadProcessed" type="button" title="Download the current song with effects applied">Download effected song</button><button class="circle iconOnly" id="closeModal" title="Close" aria-label="Close">${uiIcon("close")}</button></div></div>
       <div class="field"><label for="eqPreset">Preset</label><select id="eqPreset">${options.map(([k,n])=>`<option value="${k}" ${q.preset===k?"selected":""}>${n}</option>`).join("")}</select></div>
       <div class="formGrid" style="margin-top:14px">
         <div class="field"><label for="eqBass" id="eqBassLabel">Bass ${q.bass} dB</label><input class="eqSlider" id="eqBass" type="range" min="-24" max="24" value="${q.bass}" step="1" aria-label="Bass"></div>
