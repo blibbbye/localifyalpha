@@ -912,6 +912,19 @@ body.theme-gradient .lrcInline{background:linear-gradient(135deg,var(--panel2),v
 .lrcSelectionMode{display:flex;align-items:center;justify-content:flex-end;gap:10px}.lrcSelectionMode label{font-size:11px;color:var(--muted);font-weight:800}.lrcSelectionMode select{background:var(--panel2);color:var(--text);border:1px solid var(--theme-border);border-radius:9px;padding:8px 12px;min-width:130px}
 .lrcWord{cursor:pointer}.lrcLineWords>span.lrcWord{cursor:default}
 @media(prefers-reduced-motion:reduce){html,body,#app,#main,#content,.sidebar,.player,.nowSidebar,.profileMenu,.settingsSection,.card,.folderCard,.quickCard,.heroCard,.presetHero,.tableWrap,.modal,.lrcInline,.lrcLine,.themeChoice,button,.pill,.search input{transition:none!important}}
+
+<style id="localify-theme-surface-controls">
+body.theme-gradient aside{background:var(--theme-sidebar)!important;color:var(--theme-nav-text)!important}
+body.theme-gradient .nav button,body.theme-gradient .sideAction{color:var(--theme-nav-text)!important}
+body.theme-gradient .nav button:hover,body.theme-gradient .sideAction:hover{background:var(--theme-hover)!important}
+body.theme-gradient .nav button.active{background:color-mix(in srgb,var(--theme-a) 18%,var(--theme-hover))!important;color:var(--theme-nav-text)!important}
+body.theme-gradient .topbar{background:var(--theme-topbar)!important;border-color:var(--theme-border)!important}
+body.theme-gradient .player{background:var(--theme-player)!important;border-color:var(--theme-border)!important}
+body.theme-gradient .nowSidebar{background:var(--theme-now-playing)!important;border-color:var(--theme-border)!important}
+body.theme-gradient .search input,body.theme-gradient input:not([type=color]):not([type=range]):not([type=checkbox]),body.theme-gradient textarea,body.theme-gradient select{background:var(--theme-input)!important;border-color:var(--theme-border)!important;color:var(--text)!important}
+body.theme-gradient .btn:not(.primary),body.theme-gradient .pill,body.theme-gradient .discordServerBtn{background:var(--theme-button)!important;border-color:var(--theme-border)!important;color:var(--text)!important}
+body.theme-gradient .customThemeEditor input[type=text]{background:var(--theme-input)!important}
+</style>
 </style>
 </head>
 <body>
@@ -1043,7 +1056,7 @@ body.theme-gradient .lrcInline{background:linear-gradient(135deg,var(--panel2),v
     const t=activeLocalifyTheme();
     const vars={
       "--bg":t.bg,"--panel":t.panel,"--panel2":t.panel2,"--panel3":t.panel3,"--line":t.border,"--text":t.text||"#f7f7f8","--muted":t.muted||"#9ca3af",
-      "--theme-sidebar":t.sidebar,"--theme-border":t.border,"--theme-hover":t.hover,
+      "--theme-sidebar":t.sidebar||t.panel,"--theme-border":t.border,"--theme-hover":t.hover||t.panel3,"--theme-topbar":t.topbar||t.panel,"--theme-player":t.player||t.panel,"--theme-now-playing":t.nowPlaying||t.panel2,"--theme-nav-text":t.navText||t.text,"--theme-button":t.button||t.panel2,"--theme-input":t.input||t.panel2,
       "--theme-a":t.a,"--theme-b":t.b,"--accent":t.a,"--accent2":t.b,
       "--theme-soft":"color-mix(in srgb,"+t.a+" 13%,transparent)","--theme-soft-2":"color-mix(in srgb,"+t.b+" 8%,transparent)",
       "--theme-shadow":"color-mix(in srgb,"+t.a+" 32%,transparent)","--theme-glow-a":"color-mix(in srgb,"+t.a+" 18%,transparent)",
@@ -3679,8 +3692,8 @@ function editLocalProfile(){
   function bindCustomThemeEditor(){
     const editor=$("#customThemeEditor"),create=$("#createCustomTheme");
     if(!editor)return;
-    const theme=activeLocalifyTheme(),isCustom=(state.settings.customThemes||[]).some(t=>t.id===theme.id);
-    const fields=[["bg","Background"],["panel","Main panels"],["panel2","Raised panels"],["panel3","Cards / surfaces"],["sidebar","Sidebar"],["border","Borders"],["text","Main text"],["muted","Muted text"],["a","Accent 1"],["b","Accent 2"]];
+    const theme=activeLocalifyTheme(),isCustom=(state.settings.customThemes||[]).some(t=>t.id===theme.id);if(isCustom){theme.topbar=theme.topbar||theme.panel;theme.player=theme.player||theme.panel;theme.nowPlaying=theme.nowPlaying||theme.panel2;theme.navText=theme.navText||theme.text;theme.button=theme.button||theme.panel2;theme.input=theme.input||theme.panel2;theme.hover=theme.hover||theme.panel3;}
+    const fields=[["bg","Page background"],["panel","Main panels"],["panel2","Raised panels"],["panel3","Cards / surfaces"],["sidebar","Navigation sidebar"],["topbar","Top bar"],["player","Bottom player bar"],["nowPlaying","Now playing panel"],["border","Borders"],["text","Main text"],["muted","Muted text"],["navText","Navigation text"],["button","Buttons"],["input","Input fields"],["hover","Hover / selected"],["a","Accent 1"],["b","Accent 2"]];
     editor.innerHTML='<div class="customThemeEditor"><div class="customThemeEditorHead"><strong>Customise: '+esc(theme.name)+'</strong><span class="settingsSectionSub">'+(isCustom?"Your custom theme":"Built-in themes stay unchanged — create a copy to edit them.")+'</span></div>'+
       (isCustom?'<div class="customThemeField"><label>Theme name</label><input type="text" id="customThemeName" maxlength="32" value="'+esc(theme.name)+'" style="background:#111820;border:1px solid #303946;border-radius:8px;padding:10px;color:#e5eaf0"></div><div class="customThemeFields">'+fields.map(([key,label])=>{const value=/^#[0-9a-f]{6}$/i.test(theme[key]||"")?theme[key]:"#888888",n=parseInt(value.slice(1),16),rgb=[(n>>16)&255,(n>>8)&255,n&255].join(", ");return '<div class="customThemeField"><label>'+label+'</label><div class="customThemeColorRow"><input type="color" data-theme-color="'+key+'" value="'+value+'"><div><input type="text" data-theme-hex="'+key+'" value="'+value+'" maxlength="7" aria-label="'+label+' hex colour"><input type="text" data-theme-rgb="'+key+'" value="'+rgb+'" aria-label="'+label+' RGB values" placeholder="R, G, B"></div></div></div>'}).join("")+'</div>'+
       '':
@@ -3711,7 +3724,7 @@ function editLocalProfile(){
         const parsed=JSON.parse(await file.text());
         const incoming=Array.isArray(parsed)?parsed:parsed?.themes;
         if((parsed?.format&&parsed.format!=="LocalifyThemes")||!Array.isArray(incoming)||!incoming.length||incoming.length>100)throw new Error("This is not a valid Localify theme file.");
-        const allowed=["bg","panel","panel2","panel3","sidebar","border","text","muted","a","b"];
+        const allowed=["bg","panel","panel2","panel3","sidebar","topbar","player","nowPlaying","border","text","muted","navText","button","input","hover","a","b"];
         const clean=incoming.map((raw,index)=>{
           if(!raw||typeof raw!=="object")throw new Error("A theme entry is invalid.");
           const t={id:"custom-"+uid(),name:String(raw.name||("Imported Theme "+(index+1))).slice(0,32),desc:"Imported custom theme"};
