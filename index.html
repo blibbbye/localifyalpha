@@ -1964,7 +1964,7 @@ body.theme-gradient .lrcInline{background:linear-gradient(135deg,var(--panel2),v
     $("#folderDownload").onclick=()=>downloadFolderArchive(f.id);
     $("#folderDelete").onclick=()=>deleteFolder(f.id);
     $("#folderAddItems").onclick=()=>openFolderItemPicker(f.id);
-    bindAlbumCards();bindTrackTable();$(".artist-open").forEach(e=>e.onclick=()=>showArtist(e.dataset.id));$(".playlist-open").forEach(e=>e.onclick=()=>showPlaylist(e.dataset.id));
+    bindAlbumCards();bindTrackTable();$$(".artist-open").forEach(e=>e.onclick=()=>showArtist(e.dataset.id));$$(".playlist-open").forEach(e=>e.onclick=()=>showPlaylist(e.dataset.id));
     bindDragOrder($("#content"),".folderAlbumOrder .album-open",albums.map(x=>x.id),async order=>{reorderFolderType(f,"album",order);await save(true);showFolder(id)});
     bindDragOrder($("#content"),"tbody .track-row",songs.map(x=>x.id),async order=>{reorderFolderType(f,"song",order);await save(true);showFolder(id)});
     applyContextArtworkTheme();
@@ -2011,7 +2011,7 @@ body.theme-gradient .lrcInline{background:linear-gradient(135deg,var(--panel2),v
     $$('[data-search-filter]').forEach(b=>b.onclick=()=>{state.searchFilter=b.dataset.searchFilter;renderSearch()});
     if(state.searchFilter==="songs"||state.searchFilter==="all")bindTrackTable();
     bindAlbumCards();
-    $$(".artist-open").forEach(e=>e.onclick=()=>showArtist(e.dataset.id));
+    $$$(".artist-open").forEach(e=>e.onclick=()=>showArtist(e.dataset.id));
   }
   function searchResultsHtml(ft,fa,fr){
     const sections=[];
@@ -2046,14 +2046,14 @@ body.theme-gradient .lrcInline{background:linear-gradient(135deg,var(--panel2),v
     const items=artistList();
     const body=items.length?'<div class="'+catalogModeClass("artists",mode)+'">'+items.map(artistCard).join("")+'</div>':empty("No artists","Create an artist or import music to build your artist index.");
     $("#content").innerHTML='<div class="sectionHead"><div><h2 class="viewTitle">Artists</h2><div class="subtle">Artists have their own profile, songs and albums u can add!</div></div><div class="sectionHeadActions">'+'<button class="primary iconOnlyCreate" id="newArtist" title="Create artist" aria-label="Create artist">'+uiIcon("plus")+'</button>'+viewModeToolbar("artists",mode)+'</div></div>'+body;
-    $("#newArtist").onclick=()=>editArtist(null);$$(".artist-open").forEach(e=>e.onclick=()=>showArtist(e.dataset.id));
+    $("#newArtist").onclick=()=>editArtist(null);$$$(".artist-open").forEach(e=>e.onclick=()=>showArtist(e.dataset.id));
   }
   function renderPlaylists(){
     const mode=normalizeViewMode(state.viewModes?.playlists||"large");
     const items=sortCatalogItems("playlists",state.playlists,p=>p.name);
     const body=items.length?localifyPagedHtml(items,playlistCard,"playlists",catalogModeClass("playlists",mode)):empty("Make your first playlist","Create a playlist, then add tracks from the song menus or playlist page.");
     $("#content").innerHTML='<div class="sectionHead"><div><h2 class="viewTitle">Playlists</h2><div class="subtle">Local playlists, saved automatically on this device.</div></div><div class="sectionHeadActions">'+'<button class="primary iconOnlyCreate" id="newPlaylist" title="New playlist" aria-label="New playlist">'+uiIcon("plus")+'</button>'+viewModeToolbar("playlists",mode)+'</div></div>'+body;
-    $("#newPlaylist").onclick=()=>editPlaylist(null);$$(".playlist-open").forEach(e=>e.onclick=()=>showPlaylist(e.dataset.id));
+    $("#newPlaylist").onclick=()=>editPlaylist(null);$$$(".playlist-open").forEach(e=>e.onclick=()=>showPlaylist(e.dataset.id));
   }
   function renderFolders(){
     const folders=sortCatalogItems("folders",state.folders||[],f=>f.name);
@@ -3350,7 +3350,7 @@ body.theme-gradient .lrcInline{background:linear-gradient(135deg,var(--panel2),v
   function creditListeningTime(){const now=Date.now(),id=state.currentId;if(!id||audio.paused){analyticsRuntime.lastAt=now;analyticsRuntime.trackId=id||null;analyticsRuntime.lastPlaybackTime=null;return}if(!analyticsRuntime.lastAt||analyticsRuntime.trackId!==id){analyticsRuntime.lastAt=now;analyticsRuntime.trackId=id;analyticsRuntime.lastPlaybackTime=Number(audio.currentTime)||0;return}const delta=Math.min(5,Math.max(0,(now-analyticsRuntime.lastAt)/1000));if(delta>0){ensureAnalytics();analyticsRuntime.sessionSeconds+=delta;state.analytics.totalSeconds=(Number(state.analytics.totalSeconds)||0)+delta;state.analytics.trackSeconds[id]=(Number(state.analytics.trackSeconds[id])||0)+delta;const day=analyticsDayKey(now);state.analytics.days[day]=(Number(state.analytics.days[day])||0)+delta}const playbackNow=Number(audio.currentTime)||0,playbackDelta=analyticsRuntime.lastPlaybackTime===null?0:playbackNow-analyticsRuntime.lastPlaybackTime;if(!audio.seeking&&playbackDelta>0&&playbackDelta<=3.5)analyticsRuntime.listenedSeconds+=playbackDelta;analyticsRuntime.lastPlaybackTime=playbackNow;analyticsRuntime.lastAt=now;markTrackListenedThrough(id);if(now-analyticsRuntime.lastSaveAt>10000){analyticsRuntime.lastSaveAt=now;autoSave()}}
   function startAnalyticsSession(id){ensureAnalytics();recordTrackPlay(id);analyticsRuntime.lastAt=Date.now();analyticsRuntime.trackId=id;analyticsRuntime.sessionSeconds=0;analyticsRuntime.listenedSeconds=0;analyticsRuntime.lastPlaybackTime=Number(audio.currentTime)||0;autoSave()}
   function trackDurationContent(t){const done=state.analytics?.completed?.[t.id]===true;return '<span>'+esc(fmt(t.duration))+'</span>'+(done?'<span class="trackCompleteMark" title="Listened through" aria-label="Listened through">✓</span>':"")}
-  function markTrackListenedThrough(id){const t=trackById(id),duration=Number(audio.duration)||Number(t?.duration)||0;if(!t||!Number.isFinite(duration)||duration<=0||analyticsRuntime.trackId!==id||analyticsRuntime.listenedSeconds<duration*.9)return false;ensureAnalytics();if(state.analytics.completed[id])return false;state.analytics.completed[id]=true;autoSave();$(".track-row").forEach(row=>{if(row.dataset.id===id){const cell=row.querySelector(".trackDurationCell");if(cell)cell.innerHTML=trackDurationContent(t)}});return true}
+  function markTrackListenedThrough(id){const t=trackById(id),duration=Number(audio.duration)||Number(t?.duration)||0;if(!t||!Number.isFinite(duration)||duration<=0||analyticsRuntime.trackId!==id||analyticsRuntime.listenedSeconds<duration*.9)return false;ensureAnalytics();if(state.analytics.completed[id])return false;state.analytics.completed[id]=true;autoSave();$$(".track-row").forEach(row=>{if(row.dataset.id===id){const cell=row.querySelector(".trackDurationCell");if(cell)cell.innerHTML=trackDurationContent(t)}});return true}
   function formatHours(seconds){const h=(Number(seconds)||0)/3600;if(h<1)return Math.round(h*60)+" min";return h<10?h.toFixed(1)+" hr":Math.round(h)+" hr"}
   function recentAnalyticsDays(days=7){const out=[],now=Date.now();for(let i=days-1;i>=0;i--){const d=new Date(now-i*86400000);const key=analyticsDayKey(d.getTime());out.push([key,Number(state.analytics?.days?.[key])||0])}return out}
   function profileTopSongs(limit=10){ensureAnalytics();return Object.entries(state.analytics.plays).map(([id,count])=>({t:trackById(id),count:Number(count)||0,seconds:Number(state.analytics.trackSeconds[id])||0})).filter(x=>x.t).sort((a,b)=>b.count-a.count||b.seconds-a.seconds).slice(0,limit)}
