@@ -3634,7 +3634,7 @@ function editLocalProfile(){
       '</div>';
     const back=$("#accountSettingsBack");
     if(back)back.onclick=()=>showProfile();
-    $(".themeChoice").forEach(button=>button.onclick=()=>chooseTheme(button.dataset.theme).then(()=>showAccountSettings()));
+    $(".themeChoice").forEach(button=>{button.onclick=()=>chooseTheme(button.dataset.theme).then(()=>showAccountSettings())});
     bindCustomThemeEditor();
     const discord=$("#accountDiscord");
     if(discord)discord.onchange=async e=>{
