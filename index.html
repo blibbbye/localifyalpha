@@ -4447,7 +4447,8 @@ async function renderSongWithEffectsWav(blob,eq){
  if(!blob)throw new Error("Song audio is unavailable.");
  const AC=window.OfflineAudioContext||window.webkitOfflineAudioContext;
  if(!AC)throw new Error("This browser does not support audio export with effects.");
- const decoded=await new (window.AudioContext||window.webkitAudioContext)().decodeAudioData(await blob.arrayBuffer());
+ const DecodeContext=window.AudioContext||window.webkitAudioContext;if(!DecodeContext)throw new Error("Audio decoding is not supported in this browser.");
+ const decodeContext=new DecodeContext();let decoded;try{decoded=await decodeContext.decodeAudioData(await blob.arrayBuffer())}finally{try{await decodeContext.close()}catch{}}
  const channels=Math.max(1,Math.min(2,decoded.numberOfChannels)),length=decoded.length,sampleRate=decoded.sampleRate;
  const offline=new AC(channels,length,sampleRate),source=offline.createBufferSource();source.buffer=decoded;
  const bass=offline.createBiquadFilter(),mid=offline.createBiquadFilter(),treble=offline.createBiquadFilter(),gain=offline.createGain(),comp=offline.createDynamicsCompressor();
