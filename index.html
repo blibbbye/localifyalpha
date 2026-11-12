@@ -1060,7 +1060,7 @@ body.theme-gradient .lrcInline{background:linear-gradient(135deg,var(--panel2),v
   async function chooseTheme(id){
     if(!allLocalifyThemes().some(t=>t.id===id))return;
     state.settings.theme=id;applyTheme();await save();
-    $$(".themeChoice").forEach(b=>b.classList.toggle("active",b.dataset.theme===id));
+    $$$(".themeChoice").forEach(b=>b.classList.toggle("active",b.dataset.theme===id));
   }
 
   let queueBase=[];
@@ -3634,7 +3634,7 @@ function editLocalProfile(){
       '</div>';
     const back=$("#accountSettingsBack");
     if(back)back.onclick=()=>showProfile();
-    $(".themeChoice").forEach(button=>{button.onclick=()=>chooseTheme(button.dataset.theme).then(()=>showAccountSettings())});
+    $$(".themeChoice").forEach(button=>{button.onclick=()=>chooseTheme(button.dataset.theme).then(()=>showAccountSettings())});
     bindCustomThemeEditor();
     const discord=$("#accountDiscord");
     if(discord)discord.onchange=async e=>{
